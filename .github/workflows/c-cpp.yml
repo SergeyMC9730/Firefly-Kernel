@@ -20,7 +20,7 @@ jobs:
     - name: Make build dir
       run: mkdir build
     - name: Checkout submodules
-      uses: textbook/git-checkout-submodule-action@2.1.1
+      run: git submodule update --init --recursive
     - name: Patch compiler error
       run: sudo rm -rfv ./include/stl && git clone https://github.com/FireflyOS/Firefly-STL ./include/stl/ && cd ./include/stl && git reset --hard edc3b8ba2a
     - name: make
