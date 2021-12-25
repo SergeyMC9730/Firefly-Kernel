@@ -1,12 +1,17 @@
 #include <x86_64/drivers/ps2.hpp>
 #include <stl/cstdlib/stdio.h>
 #include <x86_64/applications/application_manager.hpp>
+#include <x86_64/drivers/ps2mouse.hpp>
+#include <x86_64/drivers/serial_legacy.hpp>
 
 namespace firefly::drivers::ps2 {
     using namespace firefly::kernel::io;
 
     constexpr short data_port = 0x60;
     constexpr short status_register = 0x64;
+
+    void (*key_handle)(void);
+    uint8_t *current_key;
     // constexpr short command_register = 0x64;
 
     enum keys : unsigned char {
@@ -94,12 +99,64 @@ namespace firefly::drivers::ps2 {
         return nullptr;
     }
 
-    
+    void redirect_to_app(void(*keyboard_handle)(void), uint8_t *currentkey){
+        key_handle = keyboard_handle;
+        current_key = currentkey;
+    }
+    void app_input() {
+        //firefly::kernel::io::legacy::writeTextSerial(": app_input()\n");
+        if (!(inb(status_register) & status::out_buffer_status)) return;
+
+        uint8_t scancode = inb(0x60);
+
+        if (scancode == keys::caps_lock) {
+            shift_pressed = !shift_pressed;
+            return;
+        }
+
+        if (scancode & 0x80) {
+            if ((scancode & ~(1UL << 7)) == keys::lshift)
+                shift_pressed = !shift_pressed;
+        } else {
+            //if(scancode != 0) printf("0x%X (0x%X) ", scancode, sc_ascii[scancode]);
+            switch (scancode) {
+                case keys::lshift: {
+                    shift_pressed = !shift_pressed;
+                    break;
+                }
+                case keys::enter: {
+                    *current_key = '\n';
+                    printf("\n");
+
+                    break;
+                }
+                case keys::backspace: {
+                    *current_key = '\b';
+                    puts("\b");
+                    break;
+                }
+                default: {
+                    char ascii = sc_ascii[scancode];
+                    if (shift_pressed) ascii -= 32;
+                    *current_key = ascii;
+                    char str[2] = { ascii, '\0' };
+                    puts(str);
+                    
+                    break;
+                }
+            }
+        }
+        key_handle();
+        return;
+    }    
 
     void handle_input() {
         if (!(inb(status_register) & status::out_buffer_status)) return;
 
         uint8_t scancode = inb(0x60);
+
+        firefly::kernel::io::legacy::writeTextSerial("scancode: 0x%X\n", scancode);
+        
 
         if (scancode == keys::caps_lock) {
             shift_pressed = !shift_pressed;

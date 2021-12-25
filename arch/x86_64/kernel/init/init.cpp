@@ -1,15 +1,23 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <stl/cstdlib/cstring.h>
+#include <stl/cstdlib/stdio.h>
 #include <x86_64/libk++/iostream.h>
 
-#include <x86_64/drivers/vbe.hpp>
+#include <x86_64/checksum.hpp>
 #include <x86_64/drivers/serial_legacy.hpp>
+#include <x86_64/drivers/vbe.hpp>
 #include <x86_64/gdt/gdt.hpp>
 #include <x86_64/init/init.hpp>
 #include <x86_64/int/interrupt.hpp>
 #include <x86_64/kernel.hpp>
-#include <x86_64/stivale2.hpp>
+#include <x86_64/memory-manager/greenleafy.hpp>
 #include <x86_64/settings.hpp>
+#include <x86_64/sleep.hpp>
+#include <x86_64/stivale2.hpp>
+#include <x86_64/drivers/pci/ide.hpp>
+#include <x86_64/fs/custom/main.hpp>
+
 
 // We need to tell the stivale bootloader where we want our stack to be.
 // We are going to allocate our stack as an uninitialised array in .bss.
@@ -25,6 +33,7 @@ static uint8_t stack[4096 * 4] __attribute__((aligned(0x1000)));
 // This tag tells the bootloader that we want a graphical framebuffer instead
 // of a CGA-compatible text mode. Omitting this tag will make the bootloader
 // default to text mode, if available.
+
 static struct stivale2_header_tag_framebuffer framebuffer_hdr_tag = {
     // Same as above.
     .tag = {
@@ -85,26 +94,144 @@ void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
 
 void bootloader_services_init(struct stivale2_struct *handover) {
     firefly::kernel::settings::init_settings();
-    
+
     bool is_serial_ready = firefly::kernel::io::legacy::serial_port_init();
-    
-    if(is_serial_ready) firefly::kernel::io::legacy::writeTextSerial("Starting up...\n\n");
+
+    if (is_serial_ready) firefly::kernel::io::legacy::writeTextSerial("Starting up...\n\n");
 
     struct stivale2_struct_tag_framebuffer *tagfb = static_cast<struct stivale2_struct_tag_framebuffer *>(stivale2_get_tag(handover, STIVALE2_STRUCT_TAG_FRAMEBUFFER_ID));
     if (tagfb == NULL) {
-        if(is_serial_ready) firefly::kernel::io::legacy::writeTextSerial("Framebuffer is NULL!!!! HALT!!\n\n");
-    
-        for (;;) asm("hlt");
+        if (is_serial_ready) firefly::kernel::io::legacy::writeTextSerial("[Error] Framebuffer is null!\n");
+
+        for (;;)
+            asm("hlt");
     }
     firefly::drivers::vbe::early_init(tagfb);
     firefly::drivers::vbe::boot_splash();
 }
 
-extern "C" [[noreturn]] void kernel_init(struct stivale2_struct *stivale2_struct) {  
-    bootloader_services_init(stivale2_struct);
+struct fp {
+    int (*a[2])(const char *, ...) = {};
 
+    firefly::mm::greenleafy::memory_block *(*b[2])(uint32_t) = {};
+    firefly::mm::greenleafy::memory_block *(*c[2])(uint64_t, uint32_t) = {};
+
+    uint32_t (*d[2])(void) = {};
+
+    void (*e[2])(char) = {};
+
+    uint8_t (*f[5])(void) = {}; //unused
+
+    uint32_t (*g[2])(const char *) = {};
+
+    void (*h[2])(unsigned long long) = {};
+
+    void (*i[2])(const char *, size_t, bool) = {};
+
+    void (*j[2])(const char *) = {};
+
+    int (*k[2])(uint32_t) = {};
+
+    char *(*l[2])(size_t, char *, int) = {};
+
+    char *(*m[2])(size_t, char *, int, bool) = {};
+
+    void (*n[2])(void) = {};
+    
+    uint8_t *kernel_settings;
+    char *kernel_settings_raw;
+} function_pointers;
+namespace itoa_b {
+char itoc(int num) {
+    return '0' + num;
+}
+
+char itoh(int num, bool upper) {
+    if (upper)
+        return num - 10 + 'A';
+    return num - 10 + 'a';
+}
+
+char *itoab(size_t num, char *str, int base, bool upper) {
+    [[maybe_unused]] size_t buffer_sz = 20;
+    [[maybe_unused]] size_t counter = 0;
+    [[maybe_unused]] size_t digit = 0;
+
+    if (!upper) {
+        return itoa(num, str, base);
+    } else {
+        while (num != 0 && counter < buffer_sz - 1) {
+            digit = (num % base);
+            if (digit > 9) {
+                str[counter++] = itoh(digit, true);
+            } else {
+                str[counter++] = itoc(digit);
+            }
+            num /= base;
+        }
+    }
+
+    str[counter] = '\0';
+    return strrev(str);
+}
+}  // namespace itoa_b
+
+
+void init_fp() {
+    function_pointers.a[0] = &printf;
+    function_pointers.a[1] = &firefly::kernel::io::legacy::writeTextSerial;
+
+    function_pointers.b[0] = &firefly::mm::greenleafy::use_block;
+    function_pointers.c[0] = &firefly::mm::greenleafy::get_block;
+
+    function_pointers.d[0] = &firefly::mm::greenleafy::get_block_limit;
+    function_pointers.d[1] = &firefly::mm::greenleafy::get_block_size_limit;
+
+    function_pointers.e[0] = &firefly::drivers::vbe::putc;
+    function_pointers.e[1] = &firefly::kernel::io::legacy::writeCharSerial;
+
+    function_pointers.g[0] = &firefly::kernel::checksum::checksum;
+
+    function_pointers.h[0] = &firefly::kernel::sleep::sleep;
+
+    function_pointers.i[0] = &firefly::kernel::io::legacy::writeSerial;
+
+    function_pointers.j[0] = &firefly::drivers::vbe::puts;
+
+    function_pointers.k[0] = &digitcount;
+
+    function_pointers.l[0] = &itoa;
+
+    function_pointers.m[0] = &itoa_b::itoab;
+
+    function_pointers.n[0] = &firefly::kernel::settings::init_settings;
+    function_pointers.kernel_settings = firefly::kernel::settings::kernel_settings;
+    function_pointers.kernel_settings_raw = firefly::kernel::settings::instruction;
+}
+
+fp *get_fp(void) {
+    return &function_pointers;
+}
+
+extern "C" [[noreturn]] void kernel_init(struct stivale2_struct *stivale2_struct) {
+    bootloader_services_init(stivale2_struct);
     firefly::kernel::core::gdt::init();
     firefly::kernel::core::interrupt::init();
+
+    init_fp();
+    firefly::kernel::io::legacy::writeTextSerial("fp *get_fp(void): 0x%X\n\n", &get_fp);
+
+    firefly::kernel::fs::custom::init("firefly");
+    firefly::kernel::fs::custom::f *file = firefly::kernel::fs::custom::make_file("test.txt", 1);
+    const char *data = "Hello World from Custom Filesystem!";
+    int i = 0;
+    while(i < 36){
+        file->data[i] = data[i];
+        i++;
+    }
+    file->size = 36;
+
     firefly::kernel::main::kernel_main();
-    for (;;);
+    for (;;)
+        ;
 }

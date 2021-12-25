@@ -38,5 +38,4 @@ binaries/
 /.vscode/*.log
 /.vscode/c_cpp_properties.json
 
-# "Commit sh" script
-commit.sh
+start.sh

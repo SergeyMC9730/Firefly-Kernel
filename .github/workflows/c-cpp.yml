@@ -2,9 +2,9 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ indev ]
   pull_request:
-    branches: [ master ]
+    branches: [ indev ] 
 
 jobs:
   build:
@@ -16,15 +16,19 @@ jobs:
       uses: actions/setup-python@v2.2.2
     - uses: actions/checkout@v2
     - name: Install packages
-      run: sudo apt-get update && sudo apt-get install nasm xorriso clang lld ovmf
+      run: sudo apt-get update && sudo apt-get install nasm xorriso clang lld ovmf zip llvm
     - name: Make build dir
       run: mkdir build
     - name: Checkout submodules
-      uses: textbook/git-checkout-submodule-action@2.1.1
+      run: git submodule update --init --recursive
+    - name: Patch compiler error
+      run: sudo rm -rfv ./include/stl && git clone https://github.com/FireflyOS/Firefly-STL ./include/stl/ && cd ./include/stl && git reset --hard edc3b8ba2a
     - name: make
       run: make ARCH=x86_64 && mv Firefly_x86_64.iso build/Firefly_x86_64.iso
-    - name: Upload a Build Artifact
+    - name: Install the Firefly API
+      run: sh Scripts/install_API.sh
+    - name: Upload Build Artifacts
       uses: actions/upload-artifact@v2.2.4
       with:
-        name: Firefly_x86_64.iso
+        name: Firefly_Artifacts.zip
         path: ./build/

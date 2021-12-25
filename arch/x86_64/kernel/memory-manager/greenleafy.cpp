@@ -5,32 +5,45 @@
 #include <x86_64/trace/strace.hpp>
 
 namespace firefly::mm::greenleafy {
-    uint8_t blocks[BLOCK_LIMIT][BLOCK_SIZE_LIMIT];
-    uint64_t current_block = 0;
-    uint32_t block_access[BLOCK_LIMIT];
+    memory_block memory_blocks[BLOCK_LIMIT];
 
-    void *alloc_block(uint32_t access) {
-        if(current_block == 512 && firefly::kernel::settings::get::block_count() == 0x51) return NULL;
-        if(current_block == 256 && firefly::kernel::settings::get::block_count() == 0x25) return NULL;
-        if(current_block == BLOCK_LIMIT && firefly::kernel::settings::get::block_count() == 0x12) {
-            firefly::trace::panic(firefly::trace::PM_NO_BLOCKS_AVALIABLE, firefly::trace::PC_NO_BLOCKS_AVALIABLE);
+    memory_block *use_block(uint32_t access) {
+        //search free blocks
+
+        uint64_t block_num = 0;
+        while(memory_blocks[block_num].is_used == 1){
+            block_num++;
         }
 
-        block_access[current_block] = (firefly::kernel::settings::get::disable_memory_block_access_rights() == 0x00) ? access : 0;
-        kernel::io::legacy::writeTextSerial("New block was allocated! Address: 0x%X\n\n", blocks[current_block]);
-        current_block++;
-        return blocks[current_block];
+        memory_blocks[block_num].block_access = access;
+        memory_blocks[block_num].is_used = 1;
+        memory_blocks[block_num].block_number = block_num;
+
+        int i = 0;
+        while(i < BLOCK_SIZE_LIMIT) memory_blocks[block_num].block[i++] = 0;
+        
+        kernel::io::legacy::writeTextSerial("New block was used (%d)! Address: 0x%X\n\n", block_num, &memory_blocks[block_num]);
+
+        return &memory_blocks[block_num];
+
+    }
+
+    void delete_block(uint64_t block_number){
+        int i = 0;
+        while(i < BLOCK_SIZE_LIMIT) memory_blocks[block_number].block[i++] = 0;
+
+        memory_blocks[block_number].is_used = 0;
     }
     
-    void *get_block(uint64_t block_number, uint32_t access){
-        if((block_access[block_number] < access || block_access[block_number] == access) && block_number < 1024){
-            return blocks[block_number];
+    memory_block *get_block(uint64_t block_number, uint32_t access){
+        if((memory_blocks[block_number].block_access < access || memory_blocks[block_number].block_access == access) && block_number < 1024){
+            return &memory_blocks[block_number];
         } else {
             return NULL;
         }
     }
 
-    uint32_t get_block_limit() { return BLOCK_LIMIT; };
-    uint32_t get_block_size_limit() { return BLOCK_SIZE_LIMIT; };
+    uint32_t get_block_limit(void) { return BLOCK_LIMIT; };
+    uint32_t get_block_size_limit(void) { return BLOCK_SIZE_LIMIT; };
     
 }

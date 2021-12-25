@@ -7,49 +7,87 @@
 #include <x86_64/applications/test/main.hpp>
 #include <x86_64/applications/help/main.hpp>
 #include <x86_64/applications/settings/main.hpp>
+#include <x86_64/applications/regs/main.hpp>
+#include <x86_64/applications/shell/main.hpp>
+#include <x86_64/applications/ls/main.hpp>
+#include <x86_64/applications/cat/main.hpp>
+#include <x86_64/applications/writefile/main.hpp>
 
 #include <x86_64/settings.hpp>
 
 #include <x86_64/checksum.hpp>
 
 namespace firefly::applications {
-    int application_checksums[256];
-    int *application_addresses[256];
-    uint16_t *application_access_control[256] = {0x0000, 0x0000, 0x0000};
+    struct apps {
+        int     *address;
+        int      checksum;
+        uint16_t access;
+    } apps_s[256];
+    int appp = 0;
 
+    void register_application(int *address, int checksum, const char *command_name){
+        apps_s[appp].address = (int *)address;
+        apps_s[appp].checksum = checksum;
+        firefly::kernel::io::legacy::writeTextSerial("Registered %s Command on address 0x%X with checksum %d\n\n", command_name, address, checksum);
+        appp++;
+
+        return;
+    }
     void registerApplications(){
-        application_addresses[0] = (int *)applications::test::test_main;
-        application_checksums[0] = applications::test::getc();
-        firefly::kernel::io::legacy::writeTextSerial("Registered Test Command on address 0x%X with checksum %d\n\n", &applications::test::test_main, applications::test::getc());
-        application_addresses[1] = (int *)applications::help::help_main;
-        application_checksums[1] = applications::help::getc();
-        firefly::kernel::io::legacy::writeTextSerial("Registered Help Command on address 0x%X with checksum %d\n\n", &applications::help::help_main, applications::help::getc());
-        application_addresses[2] = (int *)applications::settings::settings_main;
-        application_checksums[2] = applications::settings::getc();
-        firefly::kernel::io::legacy::writeTextSerial("Registered Settings Command on address 0x%X with checksum %d\n\n", &applications::settings::settings_main, applications::settings::getc());
+        register_application((int *)applications::test::test_main, applications::test::getc(), "Test");
+        register_application((int *)applications::help::help_main, applications::help::getc(), "Help");
+        register_application((int *)applications::settings::settings_main, applications::settings::getc(), "Settings");
+        register_application((int *)applications::regs::regs_main, applications::regs::getc(), "Registers");
+        register_application((int *)applications::shell::shell_main, applications::shell::getc(), "Shell");
+        register_application((int *)applications::ls::ls_main, applications::ls::getc(), "List");
+        register_application((int *)applications::cat::cat_main, applications::cat::getc(), "Cat");
+        register_application((int *)applications::writefile::writefile_main, applications::writefile::getc(), "Writefile");
 
         return;
     }
 
-    int run(const char *application, uint16_t *access_rights, char **argv){
+    int run(const char *application, uint16_t access_rights, char **argv){
         printf("\n");
+
         int checksum = firefly::kernel::checksum::checksum(application);
+
+        if(firefly::kernel::settings::kernel_settings[0] == 0x9a){
+            printf("Checksum: %d\n", checksum);
+        }
         
         uint8_t temp_pointer = 0;
         while(temp_pointer < 255){
-            if((application_checksums[temp_pointer] == checksum && ((uint16_t *)application_access_control[temp_pointer] <= (uint16_t *)access_rights || application_access_control[temp_pointer] == access_rights)) && (firefly::kernel::settings::get::disable_app_access_rights() == 0xff)) {
-                int result = ((int (*)(int, char **))application_addresses[temp_pointer])(sizeof(argv), argv);
-
+            if((apps_s[temp_pointer].checksum == checksum && (apps_s[temp_pointer].access <= access_rights || apps_s[temp_pointer].access == access_rights)) && firefly::kernel::settings::kernel_settings[2] != 0xff) {
+                int result = ((int (*)(int, char **))apps_s[temp_pointer].address)(sizeof(argv), argv);
+                if (result == -1) printf("\n[ERROR] An error has occurred in the application!\nExit code: %d\n", result);
+                
                 return result;
+
             }
 
-            if (application_checksums[temp_pointer] == checksum){
-                int result = ((int (*)(int, char **))application_addresses[temp_pointer])(sizeof(argv), argv);
+            if ((apps_s[temp_pointer].checksum == checksum) && firefly::kernel::settings::kernel_settings[2] == 0xff){
+                int result = ((int (*)(int, char **))apps_s[temp_pointer].address)(sizeof(argv), argv);
+                if (result == -1) printf("\n[ERROR] An error has occurred in the application!\nExit code: %d\n", result);
 
                 return result;
             }
             temp_pointer++;
         }
         return 0x44f9ad;
+    }
+    
+    namespace external {
+        struct app {
+            int     *size;
+            int      checksum;
+            uint16_t access;
+        } app_data;
+        uint8_t *app[8388608];
+
+        int run([[maybe_unused]] char **argv){
+            printf("\n");
+            return 0;
+            //return ((int (*)(int, char **))&app(sizeof(argv), argv));
+        }
     }
 }
