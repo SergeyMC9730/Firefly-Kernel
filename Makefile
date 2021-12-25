@@ -67,6 +67,7 @@ ifeq ($(ARCH), x86_64)
 	mkdir -vp $(BUILD_DIR)/arch/${ARCH}/applications/shell
 	mkdir -vp $(BUILD_DIR)/arch/${ARCH}/applications/ls
 	mkdir -vp $(BUILD_DIR)/arch/${ARCH}/applications/cat
+	mkdir -vp $(BUILD_DIR)/arch/${ARCH}/applications/writefile
 endif
 
 target_archs:

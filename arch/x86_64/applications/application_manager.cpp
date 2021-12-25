@@ -11,6 +11,7 @@
 #include <x86_64/applications/shell/main.hpp>
 #include <x86_64/applications/ls/main.hpp>
 #include <x86_64/applications/cat/main.hpp>
+#include <x86_64/applications/writefile/main.hpp>
 
 #include <x86_64/settings.hpp>
 
@@ -40,6 +41,7 @@ namespace firefly::applications {
         register_application((int *)applications::shell::shell_main, applications::shell::getc(), "Shell");
         register_application((int *)applications::ls::ls_main, applications::ls::getc(), "List");
         register_application((int *)applications::cat::cat_main, applications::cat::getc(), "Cat");
+        register_application((int *)applications::writefile::writefile_main, applications::writefile::getc(), "Writefile");
 
         return;
     }

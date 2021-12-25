@@ -230,7 +230,6 @@ extern "C" [[noreturn]] void kernel_init(struct stivale2_struct *stivale2_struct
         i++;
     }
     file->size = 36;
-    file->is_used = 1;
 
     firefly::kernel::main::kernel_main();
     for (;;)
