@@ -9,9 +9,6 @@
 
 #include <x86_64/settings.hpp>
 
-//I made a legacy serial port driver because original serial.cpp
-//requires a support of "new" operator and it requires a malloc function
-
 #define PORT 0x3f8
 
 namespace firefly::kernel::io::legacy {

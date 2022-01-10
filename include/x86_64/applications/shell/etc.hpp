@@ -1,18 +1,17 @@
 #pragma once
 
-struct sbif_main { //shell bitmap image format
-    int x; //relative
-    int y; //relative
-    int gbar_color;
-    bool eopl; //end of pixel line
+struct sbif {
+    int *buffer;
+    int x;
+    int y;
+    int sizex;
+    int sizey;
 };
-struct sbif { //shell bitmap image format
-    ///header
-    int size; //size of image in pixels (x * y) without header
-
-    sbif_main *sbif; //image data
+struct window {
+    char *name;
+    sbif *window_data;
 };
 
 namespace firefly::applications::shell::etc {
-    extern sbif sbiftemp;
+    extern window Window;
 }

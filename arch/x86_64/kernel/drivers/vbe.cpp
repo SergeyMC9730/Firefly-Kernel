@@ -119,7 +119,6 @@ void scroll() {
     memcpy((void*)framebuffer_addr, (void *)((size_t)framebuffer_addr + framebuffer_width * glyph_height * (4)), framebuffer_width * (framebuffer_height - glyph_width) * 6);
     boot_splash();
 }
-
 //GBAR is used
 void put_pixel(int x, int y, int color) {
     framebuffer_addr[y * (framebuffer_pitch / sizeof(uint32_t)) + x] = color;

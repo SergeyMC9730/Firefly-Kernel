@@ -1,5 +1,4 @@
 #include "x86_64/applications/shell/main.hpp"
-#include <x86_64/drivers/pci/ide.hpp>
 
 #define inb firefly::kernel::io::inb
 
@@ -11,7 +10,6 @@ namespace firefly::applications::shell {
     bool halt_draw = false;
     uint8_t current_key;
     void keyboard_handle(){
-        firefly::kernel::io::legacy::writeTextSerial("oh\n");
         return;
     }
     sbif sbiftemp;
@@ -91,36 +89,36 @@ namespace firefly::applications::shell {
             #endif
             switch(scancode){
                 case KEY_UP: {
-                    mousey += mouse_speed;
+                    mousey += (mousey > 756) ? 0 : mouse_speed;
                     break;
                 }
                 case KEY_DOWN: {
-                    mousey -= mouse_speed;
+                    mousey -= (mousey == 0) ? 0 : mouse_speed;
                     break;
                 }
                 case KEY_RIGHT: {
-                    mousex += mouse_speed;
+                    mousex += (mousex > 1008) ? 0 : mouse_speed;
                     break;
                 }
                 case KEY_LEFT: {
-                    mousex -= mouse_speed;
+                    mousex -= (mousex == 0) ? 0 : mouse_speed;
                     break;
                 }
 
                 case KEY_UPL: {
-                    mousey += mouse_speed;
+                    mousey += (mousey > 756) ? 0 : mouse_speed;
                     break;
                 }
                 case KEY_DOWNL: {
-                    mousey -= mouse_speed;
+                    mousey -= (mousey == 0) ? 0 : mouse_speed;
                     break;
                 }
                 case KEY_RIGHTL: {
-                    mousex += mouse_speed;
+                    mousex += (mousex > 1008) ? 0 : mouse_speed;
                     break;
                 }
                 case KEY_LEFTL: {
-                    mousex -= mouse_speed;
+                    mousex -= (mousex == 0) ? 0 : mouse_speed;
                     break;
                 }
 
@@ -132,13 +130,13 @@ namespace firefly::applications::shell {
                         mouse_handle_list[i].handler();
                 }
             }
-        }
-        
-        layers[mouse_layer_id].x = mousex;
-        layers[mouse_layer_id].y = mousey;
+            firefly::kernel::io::legacy::writeTextSerial("mouse x: %d | mouse y: %d\n", mousex, mousey);
+            layers[mouse_layer_id].x = mousex;
+            layers[mouse_layer_id].y = mousey;
 
-        if(firefly::kernel::shell::l1_lays_on_l2(&layers[mouse_layer_id], &layers[start_layer_id])){
-            layers[start_layer_id].gbar_color += 16;
+            if(firefly::kernel::shell::l1_lays_on_l2(&layers[mouse_layer_id], &layers[start_layer_id])){
+                layers[start_layer_id].gbar_color += 16;
+            }
         }
     }
     void layer_thread([[maybe_unused]] firefly::kernel::mp::Process *process){
@@ -147,16 +145,31 @@ namespace firefly::applications::shell {
         while(i < 32){
             if(firefly::kernel::shell::xydtest(&layers[i])){
                 switch(layers[i].action){
-                    case 0: { //pixel
-                        firefly::drivers::vbe::put_pixel(layers[i].x, layers[i].y, layers[i].gbar_color);
+                    case 0: { //image
+                        int i1 = layers[i].sbif->x;
+                        int i0 = layers[i].sbif->sizey;
+                        int bufp = 0;
+                        while(i1 < layers[i].sbif->x + layers[i].sbif->sizex){ //x
+                            while(i0 < layers[i].sbif->y + layers[i].sbif->sizey){ //y
+                                firefly::drivers::vbe::put_pixel(i1, i0, layers[i].sbif->buffer[bufp]);
+                                i0++;
+                                bufp++;
+                            }
+                            i1++;
+                            i0 = layers[i].sbif->sizey;
+                        }
                         break;
+                        // * * * *
+                        // * * * *
+                        // * D * *
+                        // * * * *
                     }
                     case 1: { //cube
-                        firefly::kernel::shell::gui::make_cube(layers[i].x, layers[i].y, layers[i].size, layers[i].gbar_color, layers[i].speed);
+                        firefly::kernel::shell::gui::make_cube(layers[i].x, layers[i].y, layers[i].size, layers[i].gbar_color, layers[i].speed, layers[i].draw2img, layers[i].sbif);
                         break;
                     }
                     case 2: { //rectangle
-                        firefly::kernel::shell::gui::make_rectangle(layers[i].x, layers[i].y, layers[i].sizex, layers[i].sizey, layers[i].gbar_color, layers[i].speed);
+                        firefly::kernel::shell::gui::make_rectangle(layers[i].x, layers[i].y, layers[i].sizex, layers[i].sizey, layers[i].gbar_color, layers[i].speed, layers[i].draw2img, layers[i].sbif);
                         break;
                     }
                     case 3: { //text

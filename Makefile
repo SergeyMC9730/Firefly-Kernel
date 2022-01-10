@@ -26,8 +26,8 @@ $(ISO): $(TARGET)
 
 	limine/limine-install $@
 	rm -rf iso_root
-	rm parsed_x86_64.sym
-	rm Scripts/parsed_x86_64.sym
+	#rm parsed_x86_64.sym
+	#rm Scripts/parsed_x86_64.sym
 
 $(TARGET): $(CONV_FILES) symlist
 	$(MAKE) -C ./include/stl # Build STL before linking
