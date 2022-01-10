@@ -8,7 +8,7 @@ Kernel for Firefly
 **Firefly OS requires 128 MB RAM**
 
 ## x64 demo:
-![Firefly](docs/elbrainfuck.png)
+![Firefly](docs/firefly_fs.png)
 
 ### Clone the repo 
  * `git clone https://github.com/SergeyMC9730/Firefly-Kernel --recursive`
