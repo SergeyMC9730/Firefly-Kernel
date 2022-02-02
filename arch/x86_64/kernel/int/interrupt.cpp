@@ -5,6 +5,8 @@
 #include <x86_64/drivers/serial_legacy.hpp>
 #include <x86_64/settings.hpp>
 
+#include <x86_64/drivers/ports.hpp>
+
 namespace firefly::kernel::core::interrupt {
 struct __attribute__((packed)) idt_gate {
     uint16_t offset_0;
@@ -101,5 +103,10 @@ __attribute__((interrupt)) __attribute__((noreturn)) void exception_wrapper([[ma
 
     for (;;)
         asm("cli;hlt");
+}
+
+void ack(int n){
+    if(n >= 12) firefly::kernel::io::outb(0xA0, 0x20);
+    firefly::kernel::io::outb(0x20, 20);
 }
 }  // namespace firefly::kernel::core::interrupt

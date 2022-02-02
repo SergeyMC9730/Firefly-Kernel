@@ -19,5 +19,7 @@ namespace firefly::kernel::core::interrupt {
     namespace change{ 
         void update(void (*handler)(iframe *), uint16_t cs, uint8_t type, uint8_t index);
     }
+    
+    void ack(int n);
 
 }  // namespace firefly::kernel::interrupt

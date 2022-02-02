@@ -4,6 +4,8 @@
 
 #include <x86_64/trace/symbols.hpp>
 
+#include <x86_64/interrupts.hpp>
+
 namespace firefly::trace {
 
 void trace_stack();
@@ -12,8 +14,10 @@ void trace_stack();
     Kernel panic
 */
 [[noreturn]] void panic(const char *P_REASON, const int P_ERRCODE) {
-    printf("**** Kernel panic ****\nReason    : %s\nError Code: 0x%X\n\n", P_REASON, P_ERRCODE);
+    printf("**** KERNEL PANIC ****\nReason    : %s\nError Code: 0x%08X\n\n", P_REASON, P_ERRCODE);
     trace_stack();
+
+    cli();
 
     while (1)
         ;

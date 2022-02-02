@@ -21,9 +21,13 @@
 
 #include <x86_64/new.hpp>
 
+#include <x86_64/drivers/pit.hpp>
+#include <x86_64/cpuid/cpuid.hpp>
+#include <x86_64/drivers/acpi.hpp>
+
 [[maybe_unused]] constexpr short MAJOR_VERSION = 0;
 [[maybe_unused]] constexpr short MINOR_VERSION = 0;
-constexpr const char *VERSION_STRING = "0.0-x86_64-fork";
+constexpr const char *VERSION_STRING = "0.1-x86_64-fork";
 
 namespace firefly::kernel::main {
 /*
@@ -49,28 +53,46 @@ void write_ff_info() {
     Initilizates a keyboard driver
 */
 void init_keyboard(){
-    printf("Initialization a Keyboard...\n");
+    printf("Initialization a keyboard...\n");
 
     bool isKeyboard = firefly::drivers::ps2::init();
     io::legacy::writeTextSerial("Keyboard Driver returned %d\n\n", (isKeyboard) ? 1 : 0);
 }
+
+ACPITable acpitable;
 
 /*
     Kernel
 */
 void kernel_main() {
     applications::registerApplications();
+    firefly::drivers::pit::init();
+    firefly::kernel::cpuid::get_model();
+    if(firefly::kernel::cpuid::check_apic() == 512){
+        printf("APIC is supported\n");
+        RSDPDescriptor20 *rsdpd = firefly::drivers::acpi::find_acpi();
+        if(rsdpd == nullptr){
+            trace::panic(trace::PM_RSDP_NOT_FOUND, trace::PC_RSDP_NOT_FOUND);
+        }
+        acpitable = firefly::drivers::acpi::parse_table(rsdpd);
+        if(acpitable.FADTable->PMTimerLength == 4){
+            printf("APIC Timer is supported\n");
+        } else {
+            printf("APIC Timer is not supported. Software multitasking will be used.")
+        }
+    } else {
+        trace::panic(trace::PM_ACPI_NOT_SUPPORTED, trace::PC_ACPI_NOT_SUPPORTED);
+    }
+    
 
     write_ff_info();
     init_keyboard();
-    //firefly::kernel::io::mouse::init();                      
+    //firefly::kernel::io::mouse::init(); 
+    firefly::drivers::pit::timer_phase(1000, PIT_COUNTER1, PIT_MODE_HARDWARE_RETRIGGER);                
     printf("\n> ");
-
 
     for(;;){
         firefly::drivers::ps2::handle_input();
     }
-
-    // trace::panic(trace::PM_MANUALLYCRASHED, trace::PC_MANUALLYCRASHED);
 }
 }  // namespace firefly::kernel::main
