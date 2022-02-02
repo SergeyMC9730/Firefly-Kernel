@@ -7,7 +7,7 @@
 #include <x86_64/applications/test/main.hpp>
 #include <x86_64/applications/help/main.hpp>
 #include <x86_64/applications/settings/main.hpp>
-#include <x86_64/applications/regs/main.hpp>
+#include <x86_64/applications/registers/main.hpp>
 #include <x86_64/applications/shell/main.hpp>
 #include <x86_64/applications/ls/main.hpp>
 #include <x86_64/applications/cat/main.hpp>
@@ -37,7 +37,7 @@ namespace firefly::applications {
         register_application((int *)applications::test::test_main, applications::test::getc(), "Test");
         register_application((int *)applications::help::help_main, applications::help::getc(), "Help");
         register_application((int *)applications::settings::settings_main, applications::settings::getc(), "Settings");
-        register_application((int *)applications::regs::regs_main, applications::regs::getc(), "Registers");
+        register_application((int *)applications::registers::registers_main, applications::registers::getc(), "Registers");
         register_application((int *)applications::shell::shell_main, applications::shell::getc(), "Shell");
         register_application((int *)applications::ls::ls_main, applications::ls::getc(), "List");
         register_application((int *)applications::cat::cat_main, applications::cat::getc(), "Cat");
