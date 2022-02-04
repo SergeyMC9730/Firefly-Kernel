@@ -23,6 +23,7 @@ namespace firefly::kernel::mp {
         processes[i].func = func;
         processes[i].block = firefly::mm::greenleafy::use_block(0);
         processes[i].nid = nid;
+        processes[i].called_times = 0;
 
         has_updated = true;
 
@@ -42,11 +43,14 @@ namespace firefly::kernel::mp {
 
         while(true) {
             //firefly::kernel::io::legacy::writeTextSerial("%d ", id2run);
-            if(processes[i].used == 1) {
+            if(processes[i].used == 1 && i != 0xFF) {
                 processes[i].func(&processes[i]);
-                if(processes[i].onetime == 1) close(i);   
+                processes[i].called_times++;
+                if(processes[i].onetime == 1) {
+                    processes[i].used = 0;
+                    firefly::mm::greenleafy::delete_block(processes[i].block->block_number);
+                } 
             }
-
             i++;
         }
     }

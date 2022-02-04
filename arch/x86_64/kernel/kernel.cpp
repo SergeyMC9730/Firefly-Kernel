@@ -52,10 +52,10 @@ void write_ff_info() {
 }
 
 /*
-    Initilizates a keyboard driver
+    Initilizates keyboard driver
 */
 void init_keyboard(){
-    printf("Initialization a keyboard...\n");
+    printf("Initialization Keyboard Driver...\n");
 
     bool isKeyboard = firefly::drivers::ps2::init();
     io::legacy::writeTextSerial("Keyboard Driver returned %d\n\n", (isKeyboard) ? 1 : 0);

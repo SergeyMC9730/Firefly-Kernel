@@ -190,7 +190,7 @@ namespace firefly::applications::shell {
     void make_shell([[maybe_unused]] firefly::kernel::mp::Process *process){
         //[[maybe_unused]] unsigned long long speed = static_cast<unsigned long long>(process->block->block[0]);
         //turn off keyboard
-        firefly::drivers::ps2::redirect_to_app(&keyboard_handle, &current_key);
+        firefly::drivers::ps2::redirect_to_app(keyboard_handle, &current_key);
 
         //set shell mode
         firefly::drivers::vbe::set_shell();

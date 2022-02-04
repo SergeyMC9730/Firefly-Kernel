@@ -9,8 +9,9 @@ namespace firefly::kernel::mp {
         void (*func)(Process *process);
         firefly::mm::greenleafy::memory_block *block;
         char *nid;
+        uint64_t called_times;
     };
-    extern unsigned char processes_used[0xFF];
+    extern bool has_updated;
     extern Process processes[0xFF];
 
     uint8_t make(void (*func)(Process *process), unsigned char run_one_time, char *nid);
