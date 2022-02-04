@@ -10,6 +10,7 @@ namespace firefly::kernel::randomizer {
     }
     unsigned long int next = 1;
     int rand(){
+        printf("r\n");
         next = next * 0x41c64e76 + 12345;
 
         return (unsigned int)(next / 65536) % 32768;

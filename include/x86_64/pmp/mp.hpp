@@ -17,4 +17,7 @@ namespace firefly::kernel::mp {
     uint8_t make(void (*func)(Process *process), unsigned char run_one_time);
     void run();
     void close(uint8_t id);
+    void turn_off();
+    void turn_on();
+    void clear();
 }

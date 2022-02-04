@@ -158,6 +158,9 @@ void clear_splash_frame() {
 void set_shell(){
     shell = true;
 }
+void remove_shell(){
+    shell = false;
+}
 
 void boot_splash() {
     if(!shell){ //temp

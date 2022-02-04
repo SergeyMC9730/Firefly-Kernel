@@ -9,6 +9,7 @@ namespace firefly::applications::shell {
     layer layers[32];
     bool halt_draw = false;
     uint8_t current_key;
+    bool is_ready = false;
     void keyboard_handle(){
         return;
     }
@@ -187,7 +188,7 @@ namespace firefly::applications::shell {
     }
 
     void make_shell([[maybe_unused]] firefly::kernel::mp::Process *process){
-        [[maybe_unused]] unsigned long long speed = static_cast<unsigned long long>(process->block->block[0]);
+        //[[maybe_unused]] unsigned long long speed = static_cast<unsigned long long>(process->block->block[0]);
         //turn off keyboard
         firefly::drivers::ps2::redirect_to_app(&keyboard_handle, &current_key);
 
@@ -195,12 +196,19 @@ namespace firefly::applications::shell {
         firefly::drivers::vbe::set_shell();
 
         mousex = mousey = 0;
+
+        is_ready = true;
         return;
     }
     void shell_init([[maybe_unused]] firefly::kernel::mp::Process *process){
-        
         layer l0 = {2, 0, 0, 0, 1024, 740, 0xFFFFFFFF, 0, nullptr, nullptr, 1, 1, (char *)"syslayer_bg"};
         make_layer(&l0);
+
+        layer l5 = {2, 0, 740, 0, 1024, 3, 0, 0, nullptr, nullptr, 1, 1, (char*)"sys_black0", 0};
+        make_layer(&l5);
+
+        layer l6 = {2, 66, 743, 0, 3, 25, 0, 0, nullptr, nullptr, 1, 1, (char*)"sys_black1", 0};
+        make_layer(&l6);
 
         layer l1 = {2, 68, 743, 0, 995, 25, firefly::kernel::shell::GBAR(132, 245, 118, 255, 0), 0, nullptr, nullptr, 1, 1, (char*)"syslayer_taskbar"};
         make_layer(&l1);
@@ -221,24 +229,12 @@ namespace firefly::applications::shell {
     }
 
     int shell_main([[maybe_unused]] int argc, [[maybe_unused]] char **argv){
+        //prepare
+        is_ready = false;
+        
         //move to pseudo multiprocessing
+        firefly::kernel::mp::turn_on();
         firefly::kernel::mp::make(&shell_init, 1, (char *)"shell_init");
-
-        // char buffer[16];
-        // char buffer1[16];
-        // char buffer2[16];
-        // char buffer3[16];
-        // layer l5 = {3, 10, 10, 0, 0, 0, firefly::kernel::shell::GBAR(46, 46, 46, 0, 0), 0, itoa(test::col0, buffer, 10), 1, 1};
-        // layer l6 = {3, 10, 26, 0, 0, 0, firefly::kernel::shell::GBAR(46, 46, 46, 0, 0), 0, itoa(test::col1, buffer1, 10), 1, 1};
-        // layer l7 = {3, 10, 42, 0, 0, 0, firefly::kernel::shell::GBAR(46, 46, 46, 0, 0), 0, itoa(test::col2, buffer2, 10), 1, 1};
-        // layer l8 = {3, 10, 58, 0, 0, 0, firefly::kernel::shell::GBAR(46, 46, 46, 0, 0), 0, itoa(test::col3, buffer3, 10), 1, 1};
-        // layer l9 = {1, 100, 100, 32, 0, 0, firefly::kernel::shell::GBAR(test::col0, test::col1, test::col2, test::col3, 0), 0, nullptr, 1, 1};
-        // make_layer(&l5);
-        // make_layer(&l6);
-        // make_layer(&l7);
-        // make_layer(&l8);
-        // make_layer(&l9);
-
         firefly::kernel::mp::run();
         
         return 0;

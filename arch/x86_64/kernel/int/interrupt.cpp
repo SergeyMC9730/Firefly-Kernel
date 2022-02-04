@@ -7,6 +7,10 @@
 
 #include <x86_64/drivers/ports.hpp>
 
+#include <x86_64/applications/shell/main.hpp>
+
+#include <x86_64/kernel.hpp>
+
 namespace firefly::kernel::core::interrupt {
 struct __attribute__((packed)) idt_gate {
     uint16_t offset_0;
@@ -75,16 +79,42 @@ void init() {
 void test_int() {
     asm volatile("int $0");
 }
+void keyboard_handle(){}
+uint8_t current_key;
 
 __attribute__((interrupt)) __attribute__((noreturn)) void interrupt_wrapper([[maybe_unused]] iframe *iframe) {
-    if(firefly::kernel::settings::kernel_settings[5] == 1){
-        firefly::kernel::io::legacy::writeTextSerial("\nCPU Exception caught\n CS: 0x%x\n", iframe->cs);
-        firefly::kernel::io::legacy::writeTextSerial("EIP: %X\n", iframe->rip);
-        firefly::kernel::io::legacy::writeTextSerial("ESP: %X\n", iframe->rsp);
+    printf("%d\n", firefly::applications::shell::is_ready);
+    if(firefly::applications::shell::is_ready){
+        if(firefly::kernel::settings::kernel_settings[5] == 1){
+            firefly::kernel::io::legacy::writeTextSerial("\nCPU Exception caught\n CS: 0x%x\n", iframe->cs);
+            firefly::kernel::io::legacy::writeTextSerial("EIP: %X\n", iframe->rip);
+            firefly::kernel::io::legacy::writeTextSerial("ESP: %X\n", iframe->rsp);
+        }
+        firefly::kernel::shell::gui::make_rectangle(0, 0, 1024, 768, firefly::kernel::shell::GBAR(255, 0, 0, 0, 0), 0, 0, nullptr);
+        firefly::kernel::shell::gui::make_text((char*)":(\nBlue Screen of Interrupt\n\nCPU Exception caught\nThis error was happened inside of the Shell Subsystem.\nIf you will get this error twice, make bug report on GitHub:\n              https://github.com/SergeyMC9730/Firefly-Kernel\n\nAditional info will be avaliable on the serial port\nPress Enter to close shell", 112, 126, 0xFFFFFFFF, 0);
+        firefly::drivers::ps2::redirect_to_app(keyboard_handle, &current_key);
+        while(current_key != 10){
+            current_key = 0;
+            firefly::drivers::ps2::app_input();
+        }
+        current_key = 0;
+        firefly::kernel::shell::gui::make_text((char*)"Working on it...", 112, 126 + 256, 0xFFFFFFFF, 0);
+        firefly::kernel::mp::clear();
+        firefly::drivers::vbe::remove_shell();
+        firefly::kernel::mp::turn_off();
+        firefly::kernel::shell::gui::make_rectangle(0, 0, 1024, 768, firefly::kernel::shell::GBAR(0, 255, 0, 0, 0), 0, 0, nullptr);
+        printf("WARNING: Doing this action for many times, system will softlock.\n");
+        firefly::kernel::main::kernel_main();
+    } else {
+        if(firefly::kernel::settings::kernel_settings[5] == 1){
+            firefly::kernel::io::legacy::writeTextSerial("\nCPU Exception caught\n CS: 0x%x\n", iframe->cs);
+            firefly::kernel::io::legacy::writeTextSerial("EIP: %X\n", iframe->rip);
+            firefly::kernel::io::legacy::writeTextSerial("ESP: %X\n", iframe->rsp);
+        }
+        printf("CPU Exception caught\n CS: 0x%x\n", iframe->cs);
+        printf("EIP: %X\n", iframe->rip);
+        printf("ESP: %X\n", iframe->rsp);
     }
-    printf("CPU Exception caught\n CS: 0x%x\n", iframe->cs);
-    printf("EIP: %X\n", iframe->rip);
-    printf("ESP: %X\n", iframe->rsp);
 
 
     for (;;)

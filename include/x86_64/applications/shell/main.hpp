@@ -46,6 +46,8 @@ namespace firefly::applications::shell {
         //debug numbers
         extern uint8_t col0, col1, col2, col3;
     }
+
+    extern bool is_ready;
     
     //temp sbif
     extern sbif sbiftemp;

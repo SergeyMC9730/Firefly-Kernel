@@ -67,8 +67,6 @@ ACPITable acpitable;
     Kernel
 */
 void kernel_main() {
-    firefly::kernel::registers::regs_t regs = firefly::kernel::registers::get();
-    printf("rcx 1: %d\n", regs.u64.rcx);
     applications::registerApplications();
     firefly::drivers::pit::init();
     firefly::kernel::cpuid::get_model();
@@ -87,9 +85,6 @@ void kernel_main() {
     } else {
         trace::panic(trace::PM_ACPI_NOT_SUPPORTED, trace::PC_ACPI_NOT_SUPPORTED);
     }
-    regs = firefly::kernel::registers::get();
-    printf("rcx 2: %d\n", regs.u64.rcx);
-
     write_ff_info();
     init_keyboard();
     //firefly::kernel::io::mouse::init(); 
