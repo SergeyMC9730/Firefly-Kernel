@@ -4,6 +4,7 @@
 #include <x86_64/drivers/serial_legacy.hpp>
 #include <x86_64/random.hpp>
 #include <x86_64/registers.hpp>
+#include <x86_64/cpuid/cpuid.hpp>
 
 namespace firefly::kernel::mp {
     int aa = 0;
@@ -40,9 +41,10 @@ namespace firefly::kernel::mp {
         firefly::kernel::randomizer::srand(firefly::kernel::registers::get().u32.ebx);
         
         unsigned char i = 0;
-
+        if(!firefly::kernel::cpuid::check_rdseed()) return;
         while(true) {
             //firefly::kernel::io::legacy::writeTextSerial("%d ", id2run);
+            [[maybe_unused]] uint16_t p2use = firefly::kernel::randomizer::rdseed((uint16_t)0);
             if(processes[i].used == 1 && i != 0xFF) {
                 processes[i].func(&processes[i]);
                 processes[i].called_times++;

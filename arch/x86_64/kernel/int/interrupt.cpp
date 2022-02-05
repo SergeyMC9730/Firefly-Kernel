@@ -8,6 +8,7 @@
 #include <x86_64/drivers/ports.hpp>
 
 #include <x86_64/applications/shell/main.hpp>
+#include <x86_64/applications/application_manager.hpp>
 
 #include <x86_64/kernel.hpp>
 
@@ -24,9 +25,9 @@ struct __attribute__((packed)) idt_gate {
 
 static_assert(16 == sizeof(idt_gate), "idt_gate size incorrect");
 
+bool is_crashed = false;
 
-
-__attribute__((interrupt)) __attribute__((noreturn)) void interrupt_wrapper([[maybe_unused]] iframe *iframe);
+__attribute__((interrupt)) void interrupt_wrapper([[maybe_unused]] iframe *iframe);
 __attribute__((interrupt)) __attribute__((noreturn)) void exception_wrapper([[maybe_unused]] iframe *iframe);
 
 static idt_gate idt[256];
@@ -82,7 +83,7 @@ void test_int() {
 void keyboard_handle(){}
 uint8_t current_key;
 
-__attribute__((interrupt)) __attribute__((noreturn)) void interrupt_wrapper([[maybe_unused]] iframe *iframe) {
+__attribute__((interrupt)) void interrupt_wrapper([[maybe_unused]] iframe *iframe) {
     printf("%d\n", firefly::applications::shell::is_ready);
     if(firefly::applications::shell::is_ready){
         if(firefly::kernel::settings::kernel_settings[5] == 1){
@@ -111,14 +112,15 @@ __attribute__((interrupt)) __attribute__((noreturn)) void interrupt_wrapper([[ma
             firefly::kernel::io::legacy::writeTextSerial("EIP: %X\n", iframe->rip);
             firefly::kernel::io::legacy::writeTextSerial("ESP: %X\n", iframe->rsp);
         }
+        if(firefly::applications::executing_from_app) printf("Application got closed by CPU Exception.\nAdditional info:\n");
         printf("CPU Exception caught\n CS: 0x%x\n", iframe->cs);
         printf("EIP: %X\n", iframe->rip);
         printf("ESP: %X\n", iframe->rsp);
+
+        if(!firefly::applications::executing_from_app) for (;;) asm("cli;hlt");
+        is_crashed = true;
+        firefly::kernel::main::kernel_main();
     }
-
-
-    for (;;)
-        asm("cli;hlt");
 }
 
 __attribute__((interrupt)) __attribute__((noreturn)) void exception_wrapper([[maybe_unused]] iframe *iframe) {

@@ -27,6 +27,8 @@
 
 #include <x86_64/registers.hpp>
 
+#include <x86_64/int/interrupt.hpp>
+
 [[maybe_unused]] constexpr short MAJOR_VERSION = 0;
 [[maybe_unused]] constexpr short MINOR_VERSION = 0;
 constexpr const char *VERSION_STRING = "0.1-x86_64-fork";
@@ -67,28 +69,30 @@ ACPITable acpitable;
     Kernel
 */
 void kernel_main() {
-    applications::registerApplications();
-    firefly::drivers::pit::init();
-    firefly::kernel::cpuid::get_model();
-    if(firefly::kernel::cpuid::check_apic() == 512){
-        printf("APIC is supported\n");
-        RSDPDescriptor20 *rsdpd = firefly::drivers::acpi::find_acpi();
-        if(rsdpd == nullptr){
-            trace::panic(trace::PM_RSDP_NOT_FOUND, trace::PC_RSDP_NOT_FOUND);
-        }
-        acpitable = firefly::drivers::acpi::parse_table(rsdpd);
-        if(acpitable.FADTable->PMTimerLength == 4){
-            printf("APIC Timer is supported\n");
+    if(!firefly::kernel::core::interrupt::is_crashed){
+        applications::registerApplications();
+        firefly::drivers::pit::init();
+        firefly::kernel::cpuid::get_model();
+        if(firefly::kernel::cpuid::check_apic() == 512){
+            printf("APIC is supported\n");
+            RSDPDescriptor20 *rsdpd = firefly::drivers::acpi::find_acpi();
+            if(rsdpd == nullptr){
+                trace::panic(trace::PM_RSDP_NOT_FOUND, trace::PC_RSDP_NOT_FOUND);
+            }
+            acpitable = firefly::drivers::acpi::parse_table(rsdpd);
+            if(acpitable.FADTable->PMTimerLength == 4){
+                printf("APIC Timer is supported\n");
+            } else {
+                printf("APIC Timer is not supported. Software multitasking will be used.");
+            }
         } else {
-            printf("APIC Timer is not supported. Software multitasking will be used.");
+            trace::panic(trace::PM_ACPI_NOT_SUPPORTED, trace::PC_ACPI_NOT_SUPPORTED);
         }
-    } else {
-        trace::panic(trace::PM_ACPI_NOT_SUPPORTED, trace::PC_ACPI_NOT_SUPPORTED);
-    }
-    write_ff_info();
-    init_keyboard();
-    //firefly::kernel::io::mouse::init(); 
-    firefly::drivers::pit::timer_phase(1000, PIT_COUNTER1, PIT_MODE_HARDWARE_RETRIGGER);                
+        write_ff_info();
+        init_keyboard();
+        //firefly::kernel::io::mouse::init(); 
+        firefly::drivers::pit::timer_phase(1000, PIT_COUNTER1, PIT_MODE_HARDWARE_RETRIGGER); 
+    }               
     printf("\n> ");
 
     for(;;){

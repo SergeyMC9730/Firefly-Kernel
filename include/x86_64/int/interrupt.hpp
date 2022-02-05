@@ -16,6 +16,8 @@ namespace firefly::kernel::core::interrupt {
     // test interrupt handler
     void test_int();
 
+    extern bool is_crashed;
+
     namespace change{ 
         void update(void (*handler)(iframe *), uint16_t cs, uint8_t type, uint8_t index);
     }

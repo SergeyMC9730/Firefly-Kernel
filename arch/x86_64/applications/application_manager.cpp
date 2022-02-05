@@ -25,6 +25,8 @@ namespace firefly::applications {
     } apps_s[256];
     int appp = 0;
 
+    bool executing_from_app = false;
+
     void register_application(int *address, int checksum, const char *command_name){
         apps_s[appp].address = (int *)address;
         apps_s[appp].checksum = checksum;
@@ -58,7 +60,9 @@ namespace firefly::applications {
         uint8_t temp_pointer = 0;
         while(temp_pointer < 255){
             if((apps_s[temp_pointer].checksum == checksum && (apps_s[temp_pointer].access <= access_rights || apps_s[temp_pointer].access == access_rights)) && firefly::kernel::settings::kernel_settings[2] != 0xff) {
+                executing_from_app = true;
                 int result = ((int (*)(int, char **))apps_s[temp_pointer].address)(sizeof(argv), argv);
+                executing_from_app = false;
                 if (result == -1) printf("\n[ERROR] An error has occurred in the application!\nExit code: %d\n", result);
                 
                 return result;
@@ -66,7 +70,9 @@ namespace firefly::applications {
             }
 
             if ((apps_s[temp_pointer].checksum == checksum) && firefly::kernel::settings::kernel_settings[2] == 0xff){
+                executing_from_app = true;
                 int result = ((int (*)(int, char **))apps_s[temp_pointer].address)(sizeof(argv), argv);
+                executing_from_app = false;
                 if (result == -1) printf("\n[ERROR] An error has occurred in the application!\nExit code: %d\n", result);
 
                 return result;
@@ -80,9 +86,8 @@ namespace firefly::applications {
         struct app {
             int     *size;
             int      checksum;
-            uint16_t access;
         } app_data;
-        uint8_t *app[8388608];
+        //uint8_t *app[8388608];
 
         int run([[maybe_unused]] char **argv){
             printf("\n");
