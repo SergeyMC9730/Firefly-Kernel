@@ -70,7 +70,7 @@ static bool check_special(char c) {
     
     if (c == '\n') {
         if (static_cast<size_t>(console_y) >= framebuffer_height - glyph_height) {
-            scroll();
+            if(!shell) scroll();
             console_y = framebuffer_height - (glyph_height * 2);
             console_x = glyph_width;
         }

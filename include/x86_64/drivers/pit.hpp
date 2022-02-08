@@ -12,6 +12,9 @@ namespace firefly::drivers::pit {
         #define PIT_COUNTER0 0
         #define PIT_COUNTER1 64
         #define PIT_COUNTER2 128
+        #define PIT_COUNTER0P 0x40
+        #define PIT_COUNTER1P 0x41
+        #define PIT_COUNTER2P 0x42
         #define PIT_MODE_INT_ON_TERM 0
         #define PIT_MODE_HARDWARE_RETRIGGER 2
         #define PIT_MODE_RATE_GENERATOR 4
@@ -34,7 +37,7 @@ namespace firefly::drivers::pit {
     extern uint64_t ticks;
     extern uint8_t subticks;
 
-    void timer_phase(int hz, uint8_t counter, uint8_t mode);
+    void timer_phase(int hz, uint8_t counter, uint8_t mode, uint8_t port);
     void handler(iframe *i);
     void init();
 }

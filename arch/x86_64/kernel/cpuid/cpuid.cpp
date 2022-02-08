@@ -23,10 +23,10 @@ namespace firefly::kernel::cpuid {
             "jz rdseeda\n\t"
             "jnz rdseedn\n\t"
             "rdseeda:\n\t"
-            "   movl $0x00, %%ebx\n\t"
+            "   movl $0x01, %%ebx\n\t"
             "   movl %%ebx, %0\n\t"
             "rdseedn:\n\t"
-            "   movl $0x01, %%ebx\n\t"
+            "   movl $0x00, %%ebx\n\t"
             "   movl %%ebx, %0"
             : "=b" (result)
         );

@@ -31,11 +31,12 @@ struct mouse_handle {
 namespace firefly::kernel::shell {
     inline bool xydtest(layer *l){
         if(l->x < 0 || l->y < 0) return false;
-        if(l->draw == 0) return false; 
+        if(l->draw == 0) return false;
+        if(l->is_used == 0) return false;
         return true;
     }
     inline bool l1_lays_on_l2(layer *l1, layer *l2){
-        if(((l1->x - l2->x) - (l1->y - l2->y)) < 0) return true;
+        if(l1->x > l2->x && l1->x < (l2->x + l2->sizex) && l1->y > l2->y && l1->y < (l2->y + l2->sizey)) return true;
         return false;
     }
 }

@@ -4,7 +4,9 @@
 #include <x86_64/drivers/serial_legacy.hpp>
 #include <x86_64/random.hpp>
 #include <x86_64/registers.hpp>
-#include <x86_64/cpuid/cpuid.hpp>
+#include <x86_64/drivers/ports.hpp>
+
+using namespace firefly::kernel::io;
 
 namespace firefly::kernel::mp {
     int aa = 0;
@@ -40,18 +42,36 @@ namespace firefly::kernel::mp {
         if(!work) return;
         firefly::kernel::randomizer::srand(firefly::kernel::registers::get().u32.ebx);
         
+        uint8_t list[0xFE];
+
         unsigned char i = 0;
-        if(!firefly::kernel::cpuid::check_rdseed()) return;
+        unsigned char i2 = 0;
         while(true) {
-            //firefly::kernel::io::legacy::writeTextSerial("%d ", id2run);
-            [[maybe_unused]] uint16_t p2use = firefly::kernel::randomizer::rdseed((uint16_t)0);
-            if(processes[i].used == 1 && i != 0xFF) {
-                processes[i].func(&processes[i]);
-                processes[i].called_times++;
-                if(processes[i].onetime == 1) {
-                    processes[i].used = 0;
-                    firefly::mm::greenleafy::delete_block(processes[i].block->block_number);
-                } 
+            if(has_updated) {
+                has_updated = false;
+                i = 0;
+                i2 = 0;
+                while(i < 0xFE){
+                    if(processes[i].used) {
+                        list[i2] = i;
+                        i2++;
+                    }
+                    i++;
+                }
+            }
+            uint8_t id2use = inb(0x40) % i2;
+            // if(processes[i].used == 1 && i != 0xFF) {
+            //     processes[i].func(&processes[i]);
+            //     processes[i].called_times++;
+            //     if(processes[i].onetime == 1) {
+            //         processes[i].used = 0;
+            //         firefly::mm::greenleafy::delete_block(processes[i].block->block_number);
+            //     } 
+            // }
+            if(processes[list[id2use]].used == 1 && list[id2use] != 0xFF) {
+                processes[list[id2use]].func(&processes[list[id2use]]);
+                processes[list[id2use]].called_times++;
+                if(processes[list[id2use]].onetime == 1) close(list[id2use]);
             }
             i++;
         }

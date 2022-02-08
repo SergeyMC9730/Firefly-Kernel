@@ -91,7 +91,6 @@ void kernel_main() {
         write_ff_info();
         init_keyboard();
         //firefly::kernel::io::mouse::init(); 
-        firefly::drivers::pit::timer_phase(1000, PIT_COUNTER1, PIT_MODE_HARDWARE_RETRIGGER); 
     }               
     printf("\n> ");
 

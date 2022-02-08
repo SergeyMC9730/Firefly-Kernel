@@ -39,7 +39,19 @@ namespace firefly::applications::shell {
         
         return i;
     }
+
+    uint8_t window_layer_id = 0;
+
     void gui_start_main(){
+        window *w = firefly::kernel::shell::gui::make_window("hi");
+        layer lw = {0, w->window_data->x, w->window_data->y, 0, 0, 0, 0, 0, nullptr, w->window_data, 1, 1, (char*)"sys_window", 0};
+        window_layer_id = make_layer(&lw);
+        // uint8_t mouse_temp;
+        // layer l3 = {1, layers[mouse_layer_id].x, layers[mouse_layer_id].y, 16, 16, 16, firefly::kernel::shell::GBAR(118, 188, 245, 255, 0), 0, nullptr, nullptr, 1, 1, (char*)"syslayer_mouse"};
+        // mouse_temp = make_layer(&l3);
+        // layers[mouse_layer_id].is_used = false;
+        // layers[mouse_layer_id].draw = false;
+        // mouse_layer_id = mouse_temp;
         return;
     }
     uint8_t make_layer(layer *l){
@@ -131,7 +143,9 @@ namespace firefly::applications::shell {
                         mouse_handle_list[i].handler();
                 }
             }
+            #ifdef DEBUG_MODE
             firefly::kernel::io::legacy::writeTextSerial("mouse x: %d | mouse y: %d\n", mousex, mousey);
+            #endif
             layers[mouse_layer_id].x = mousex;
             layers[mouse_layer_id].y = mousey;
 
@@ -140,24 +154,23 @@ namespace firefly::applications::shell {
             }
         }
     }
+    uint8_t layer_thread_i = 0;
     void layer_thread([[maybe_unused]] firefly::kernel::mp::Process *process){
-        if(halt_draw) return;
-        uint8_t i = 0;
-        while(i < 32){
-            if(firefly::kernel::shell::xydtest(&layers[i])){
+            if(firefly::kernel::shell::xydtest(&layers[layer_thread_i]) && layer_thread_i != mouse_layer_id){
+                uint8_t i = layer_thread_i;
                 switch(layers[i].action){
                     case 0: { //image
                         int i1 = layers[i].sbif->x;
-                        int i0 = layers[i].sbif->sizey;
+                        int i0 = layers[i].sbif->y;
                         int bufp = 0;
                         while(i1 < layers[i].sbif->x + layers[i].sbif->sizex){ //x
-                            while(i0 < layers[i].sbif->y + layers[i].sbif->sizey){ //y
+                            while(i0 < layers[i].sbif->sizey + layers[i].sbif->y){ //y
                                 firefly::drivers::vbe::put_pixel(i1, i0, layers[i].sbif->buffer[bufp]);
                                 i0++;
                                 bufp++;
                             }
                             i1++;
-                            i0 = layers[i].sbif->sizey;
+                            i0 = layers[i].sbif->y;
                         }
                         break;
                         // * * * *
@@ -181,9 +194,9 @@ namespace firefly::applications::shell {
                     default: while(true);
                 }
             }
-            
-            i++;
-        }
+            firefly::kernel::shell::gui::make_cube(layers[mouse_layer_id].x, layers[mouse_layer_id].y, layers[mouse_layer_id].size, layers[mouse_layer_id].gbar_color, layers[mouse_layer_id].speed, layers[mouse_layer_id].draw2img, layers[mouse_layer_id].sbif);
+            layer_thread_i++;
+            if(layer_thread_i == 32) layer_thread_i = 0;
         halt_draw = true;
     }
 
@@ -217,7 +230,7 @@ namespace firefly::applications::shell {
         start_layer_id = make_layer(&l2);
         make_mouse_handler(&gui_start_main, &l2);
 
-        layer l3 = {1, 0, 0, 16, 0, 0, firefly::kernel::shell::GBAR(118, 188, 245, 255, 0), 0, nullptr, nullptr, 1, 1, (char*)"syslayer_mouse"};
+        layer l3 = {1, 0, 0, 16, 16, 16, firefly::kernel::shell::GBAR(118, 188, 245, 255, 0), 0, nullptr, nullptr, 1, 1, (char*)"syslayer_mouse"};
         mouse_layer_id = make_layer(&l3);
 
         layer l4 = {3, 3, 747, 0, 0, 0, firefly::kernel::shell::GBAR(46, 46, 46, 0, 0), 0, (char*)"Start", nullptr, 1, 1, (char*)"syslayer_startb_label"};

@@ -116,6 +116,7 @@ __attribute__((interrupt)) void interrupt_wrapper([[maybe_unused]] iframe *ifram
         printf("CPU Exception caught\n CS: 0x%x\n", iframe->cs);
         printf("EIP: %X\n", iframe->rip);
         printf("ESP: %X\n", iframe->rsp);
+        printf("INT NO: %X\n", iframe->int_no);
 
         if(!firefly::applications::executing_from_app) for (;;) asm("cli;hlt");
         is_crashed = true;

@@ -71,10 +71,10 @@ namespace firefly::kernel::shell::gui {
         }
     }
     inline window *make_window(const char *name){
-        firefly::applications::shell::etc::Window.window_data->sizex = 927;
-        firefly::applications::shell::etc::Window.window_data->sizey = 463;
-        firefly::applications::shell::etc::Window.window_data->x = 56;
-        firefly::applications::shell::etc::Window.window_data->y = 142;
+        firefly::applications::shell::etc::Window.window_data->sizex = 400;
+        firefly::applications::shell::etc::Window.window_data->sizey = 300;
+        firefly::applications::shell::etc::Window.window_data->x = 256;
+        firefly::applications::shell::etc::Window.window_data->y = 496;
         firefly::applications::shell::etc::Window.window_data->buffer = (int*)firefly::mm::greenleafy::use_block(0)->block;
         int i = 0;
         while(name[i] != 0){

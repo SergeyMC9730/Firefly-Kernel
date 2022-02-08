@@ -26,7 +26,6 @@ CXX_FLAGS =						\
 	-g 							\
 	-nostdlib 					\
 	-fno-builtin 				\
-	-fno-PIC 					\
 	-fpie						\
 	-mno-red-zone 				\
 	-fno-stack-check 			\
