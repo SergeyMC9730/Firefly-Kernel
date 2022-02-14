@@ -70,6 +70,9 @@ ifeq ($(ARCH), x86_64)
 	mkdir -vp $(BUILD_DIR)/arch/${ARCH}/applications/ls
 	mkdir -vp $(BUILD_DIR)/arch/${ARCH}/applications/cat
 	mkdir -vp $(BUILD_DIR)/arch/${ARCH}/applications/writefile
+	mkdir -vp $(BUILD_DIR)/arch/${ARCH}/applications/shutdown
+	mkdir -vp $(BUILD_DIR)/arch/${ARCH}/applications/mkdir
+	mkdir -vp $(BUILD_DIR)/arch/${ARCH}/applications/rm
 endif
 
 target_archs:

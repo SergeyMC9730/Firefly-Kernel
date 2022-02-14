@@ -5,6 +5,7 @@
 #include <x86_64/random.hpp>
 #include <x86_64/registers.hpp>
 #include <x86_64/drivers/ports.hpp>
+#include <x86_64/kernel.hpp>
 
 using namespace firefly::kernel::io;
 
@@ -40,40 +41,37 @@ namespace firefly::kernel::mp {
 
     void run(){
         if(!work) return;
-        firefly::kernel::randomizer::srand(firefly::kernel::registers::get().u32.ebx);
+        if(firefly::kernel::main::acpitable.FADTable->PMTimerLength != 4){
+            firefly::kernel::randomizer::srand(firefly::kernel::registers::get().u32.ebx);
         
-        uint8_t list[0xFE];
+            uint8_t list[0xFE];
 
-        unsigned char i = 0;
-        unsigned char i2 = 0;
-        while(true) {
-            if(has_updated) {
-                has_updated = false;
-                i = 0;
-                i2 = 0;
-                while(i < 0xFE){
-                    if(processes[i].used) {
-                        list[i2] = i;
-                        i2++;
+            unsigned char i = 0;
+            unsigned char i2 = 0;
+            while(true) {
+                if(has_updated) {
+                    has_updated = false;
+                    i = 0;
+                    i2 = 0;
+                    while(i < 0xFE){
+                        if(processes[i].used) {
+                            list[i2] = i;
+                            i2++;
+                        }
+                        i++;
                     }
-                    i++;
                 }
+                uint8_t id2use = inb(0x40) % i2;
+                if(processes[list[id2use]].used == 1 && list[id2use] != 0xFF) {
+                    processes[list[id2use]].func(&processes[list[id2use]]);
+                    processes[list[id2use]].called_times++;
+                    if(processes[list[id2use]].onetime == 1) close(list[id2use]);
+                }
+                i++;
             }
-            uint8_t id2use = inb(0x40) % i2;
-            // if(processes[i].used == 1 && i != 0xFF) {
-            //     processes[i].func(&processes[i]);
-            //     processes[i].called_times++;
-            //     if(processes[i].onetime == 1) {
-            //         processes[i].used = 0;
-            //         firefly::mm::greenleafy::delete_block(processes[i].block->block_number);
-            //     } 
-            // }
-            if(processes[list[id2use]].used == 1 && list[id2use] != 0xFF) {
-                processes[list[id2use]].func(&processes[list[id2use]]);
-                processes[list[id2use]].called_times++;
-                if(processes[list[id2use]].onetime == 1) close(list[id2use]);
-            }
-            i++;
+        } else {
+            //WIP
+            return;
         }
     }
     void turn_off(){

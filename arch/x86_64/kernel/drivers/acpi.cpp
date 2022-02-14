@@ -28,10 +28,9 @@ namespace firefly::drivers::acpi {
     //     }
     //}
     RSDPDescriptor20 *find_acpi() {
-        //we now that acpi exists in the system because we have checked before acpi
+        //we know that acpi exists in the system because we have checked before finding it
         char *memrange0[2] = {(char*)0x40E, (char*)0xFFF};
-        char *memrange1[2] = {(char*)0x000E0000 //multiboot2 has string with 'RSD PTR '
-        , (char*)0x000FFFFF};
+        char *memrange1[2] = {(char*)0x000E0000, (char*)0x000FFFFF};
 
         void *ret;
         
@@ -85,12 +84,8 @@ namespace firefly::drivers::acpi {
             }
         }
         //printf("status0: %d | status1: %d\n", status[0], status[1]);
-        if(status[0] == 1){
-            firefly::kernel::print_ramdata(memrange0[0] + i - 64, 512);
-            return (RSDPDescriptor20 *)ret;
-        }
-        if(status[1] == 1){
-            firefly::kernel::print_ramdata(memrange0[1] + i - 64, 512);
+        if(status[0] == 1 || status[1] == 1){
+            firefly::kernel::print_ramdata(((char*)ret) - 64, 512);
             return (RSDPDescriptor20 *)ret;
         }
         printf("RSDP not found!\n");

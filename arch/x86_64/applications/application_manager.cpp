@@ -48,7 +48,7 @@ namespace firefly::applications {
         return;
     }
 
-    int run(const char *application, uint16_t access_rights, char **argv){
+    int run(const char *application, [[maybe_unused]] uint16_t access_rights, char **argv){
         printf("\n");
 
         int checksum = firefly::kernel::checksum::checksum(application);
@@ -59,7 +59,7 @@ namespace firefly::applications {
         
         uint8_t temp_pointer = 0;
         while(temp_pointer < 255){
-            if((apps_s[temp_pointer].checksum == checksum && (apps_s[temp_pointer].access <= access_rights || apps_s[temp_pointer].access == access_rights)) && firefly::kernel::settings::kernel_settings[2] != 0xff) {
+            if(apps_s[temp_pointer].checksum == checksum) {
                 executing_from_app = true;
                 int result = ((int (*)(int, char **))apps_s[temp_pointer].address)(sizeof(argv), argv);
                 executing_from_app = false;
@@ -68,31 +68,21 @@ namespace firefly::applications {
                 return result;
 
             }
-
-            if ((apps_s[temp_pointer].checksum == checksum) && firefly::kernel::settings::kernel_settings[2] == 0xff){
-                executing_from_app = true;
-                int result = ((int (*)(int, char **))apps_s[temp_pointer].address)(sizeof(argv), argv);
-                executing_from_app = false;
-                if (result == -1) printf("\n[ERROR] An error has occurred in the application!\nExit code: %d\n", result);
-
-                return result;
-            }
             temp_pointer++;
         }
-        return 0x44f9ad;
+        return INT32_MAX;
     }
     
     namespace external {
         struct app {
-            int     *size;
-            int      checksum;
+            int size;
+            int checksum;
+            int *address;
         } app_data;
-        //uint8_t *app[8388608];
 
         int run([[maybe_unused]] char **argv){
             printf("\n");
             return 0;
-            //return ((int (*)(int, char **))&app(sizeof(argv), argv));
         }
     }
 }

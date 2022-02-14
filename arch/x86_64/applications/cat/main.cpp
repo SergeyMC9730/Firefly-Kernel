@@ -41,7 +41,7 @@ namespace firefly::applications::cat {
             firefly::drivers::ps2::app_input();
         }
         aa = 0;
-        while(aa < 256){
+        while(aa < 1024){
             if(strcmp_a()){
                 printf("%s|%d\n@\n", firefly::kernel::fs::custom::filesystem.files[aa].data, firefly::kernel::fs::custom::filesystem.files[aa].id);       
             }

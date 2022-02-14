@@ -123,7 +123,6 @@ struct ACPITable {
 };
 
 namespace firefly::drivers::acpi {
-    //uint8_t find_sing(char *p);
     RSDPDescriptor20 *find_acpi();
     void init();
     ACPITable parse_table(RSDPDescriptor20 *r);

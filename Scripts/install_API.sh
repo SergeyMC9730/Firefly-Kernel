@@ -57,5 +57,3 @@ stat Firefly_Artifacts.zip
 rm -rfv Firefly_API.zip Firefly_x86_64.iso
 
 cd ..
-
-#Upload

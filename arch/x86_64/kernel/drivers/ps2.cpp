@@ -189,7 +189,7 @@ namespace firefly::drivers::ps2 {
         
                     while(i < size) stdin[++i] = '\0'; 
 
-                    if(result == 0x44f9ad) printf("[ERROR] Command not found!\n");
+                    if(result == INT32_MAX) printf("[ERROR] Command not found!\n");
                     
                     printf("\n> ");
 

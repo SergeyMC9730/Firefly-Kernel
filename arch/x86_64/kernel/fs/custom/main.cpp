@@ -3,7 +3,7 @@
 #include <x86_64/random.hpp>
 
 namespace firefly::kernel::fs::custom {
-    structure filesystem;
+    filesystem_t filesystem;
     void init(const char *name){
         uint8_t i = 0;
         while(i < 64 && name[i] != 0){
@@ -12,11 +12,11 @@ namespace firefly::kernel::fs::custom {
         }
         return;
     }
-    f *make_file(const char *name, int format){
+    file_t *make_file(const char *name, int format){
         //find free file slot
         uint16_t i = 0;
-        while(i < 256 && filesystem.files[i].is_used == 1) {
-            if(i == 255 && filesystem.files[i].is_used == 1) return nullptr;
+        while(i < 1024 && filesystem.files[i].is_used == 1) {
+            if(i == 1023 && filesystem.files[i].is_used == 1) return nullptr;
             i++;
         }
         //rename file
@@ -34,13 +34,13 @@ namespace firefly::kernel::fs::custom {
         return &filesystem.files[fslot]; 
     }
     void remove_file(int id){
-        uint16_t i = 0;
-        while(i < 256 && filesystem.files[i].id != id) {
-            if(i == 255 && filesystem.files[i].id != id) return;
-            i++;
-        }
-        filesystem.files[i].is_used = 0;
-
+        filesystem.files[id % UINT8_MAX].is_used = 0;
         return;
+    }
+    file_t *make_folder(const char *name){
+        file_t *res = make_file(name, 2);
+        res->flags[0] = 1;
+        
+        return res;
     }
 }

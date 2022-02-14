@@ -11,7 +11,7 @@ namespace firefly::applications::ls {
             i++;
         }
         i = 0;
-        printf("Volume \"%s\" : %d bytes in total.\n", firefly::kernel::fs::custom::filesystem.name, total_size);
+        printf("Volume \"%s\" : %d files ; %d bytes in total.\n", firefly::kernel::fs::custom::filesystem.name, firefly::kernel::fs::custom::filesystem.file_count, total_size);
         while(i < 256){
             if(firefly::kernel::fs::custom::filesystem.files[i].is_used == 1){
                 printf(": %s@%d -> %d bytes\n", firefly::kernel::fs::custom::filesystem.files[i].name, firefly::kernel::fs::custom::filesystem.files[i].id, firefly::kernel::fs::custom::filesystem.files[i].size);
