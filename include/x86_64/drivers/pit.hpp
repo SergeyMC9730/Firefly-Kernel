@@ -9,35 +9,37 @@
 #include <x86_64/interrupts.hpp>
 
 namespace firefly::drivers::pit {
-        #define PIT_COUNTER0 0
-        #define PIT_COUNTER1 64
-        #define PIT_COUNTER2 128
-        #define PIT_COUNTER0P 0x40
-        #define PIT_COUNTER1P 0x41
-        #define PIT_COUNTER2P 0x42
-        #define PIT_MODE_INT_ON_TERM 0
-        #define PIT_MODE_HARDWARE_RETRIGGER 2
-        #define PIT_MODE_RATE_GENERATOR 4
-        #define PIT_MODE_SQUARE_WAVE 6
-        #define PIT_MODE_SOFTWARE_STROBE 8
-        #define PIT_MODE_HARDWARE_STROBE 10
-    
-    constexpr int pit_defs[] = {
-        0x40,    //port a          0
-        0x41,    //port b          1
-        0x42,    //port c          2
-        0x43,    //control port    3
-        0xFC,    //mask            4
-        1193180, //scale           5
-        0x36     //set             6
-    };
-    
-    constexpr int timer_irq = 0;
+    #define PIC1		    0x20		/* IO base address for master PIC */
+    #define PIC2		    0xA0		/* IO base address for slave PIC */
+    #define PIC1_COMMAND	PIC1
+    #define PIC1_DATA	    (PIC1+1)
+    #define PIC2_COMMAND	PIC2
+    #define PIC2_DATA	    (PIC2+1)
 
-    extern uint64_t ticks;
-    extern uint8_t subticks;
+    #define ICW1_ICW4	    0x01		/* ICW4 (not) needed */
+    #define ICW1_SINGLE	    0x02		/* Single (cascade) mode */
+    #define ICW1_INTERVAL4	0x04		/* Call address interval 4 (8) */
+    #define ICW1_LEVEL	    0x08		/* Level triggered (edge) mode */
+    #define ICW1_INIT	    0x10		/* Initialization - required! */
+    
+    #define ICW4_8086	    0x01		/* 8086/88 (MCS-80/85) mode */
+    #define ICW4_AUTO	    0x02		/* Auto (normal) EOI */
+    #define ICW4_BUF_SLAVE	0x08		/* Buffered mode/slave */
+    #define ICW4_BUF_MASTER	0x0C		/* Buffered mode/master */
+    #define ICW4_SFNM	    0x10		/* Special fully nested (not) */
 
-    void timer_phase(int hz, uint8_t counter, uint8_t mode, uint8_t port);
-    void handler(iframe *i);
+    #define PIC_READ_IRR    0x0A
+    #define PIC_READ_ISR    0x0B
+    
+    void send_eoi(uint8_t irq);
+    void remap(int offset1, int offset2);
+    void disable();
+    void mask(uint8_t irq);
+    void clear_mask(uint8_t irq);
+
+    uint16_t get_irq(int ocw3);
+    uint16_t get_irr();
+    uint16_t get_isr();
+    
     void init();
 }

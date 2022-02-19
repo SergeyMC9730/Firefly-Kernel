@@ -64,7 +64,7 @@ ACPITable acpitable;
     Kernel
 */
 void kernel_main() {
-    if(!firefly::kernel::core::interrupt::is_crashed){
+    //if(!firefly::kernel::core::interrupt::is_crashed){
         applications::registerApplications();
         firefly::drivers::pit::init();
         firefly::kernel::cpuid::get_model();
@@ -86,7 +86,7 @@ void kernel_main() {
         write_ff_info();
         init_keyboard();
         //firefly::kernel::io::mouse::init(); 
-    }               
+    //}               
     printf("\n> ");
 
     for(;;){
