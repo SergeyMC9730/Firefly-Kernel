@@ -50,6 +50,7 @@ void write_ff_info() {
     puts("\n");
 }
 
+
 /*
     Initilizates keyboard driver
 */
@@ -94,3 +95,7 @@ void kernel_main() {
     }
 }
 }  // namespace firefly::kernel::main
+
+extern "C" void keyboard_handler([[maybe_unused]] iframe_t *frame){
+    printf("handler!!\n");
+}
