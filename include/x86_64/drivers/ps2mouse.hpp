@@ -16,7 +16,7 @@ namespace firefly::kernel::io::mouse {
         extern int8_t x;
         extern int8_t y;
     }
-    void handle(iframe_t *intframe);
+    void handle(iframe *intframe);
     void wait(uint8_t is_write);
     void write(uint8_t byte);
     uint8_t read();

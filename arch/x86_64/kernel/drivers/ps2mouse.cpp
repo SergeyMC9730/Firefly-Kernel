@@ -8,7 +8,7 @@ namespace firefly::kernel::io::mouse {
         int8_t x = 0;
         int8_t y = 0;
     }
-    void handle([[maybe_unused]] iframe_t *intframe){
+    void handle([[maybe_unused]] iframe *intframe){
         firefly::kernel::io::legacy::writeTextSerial("catcha 1\n");
         switch(variables::cycle){
             case 0: {
@@ -66,7 +66,7 @@ namespace firefly::kernel::io::mouse {
 
         write(0xF4);
         read();
-        
-        //firefly::kernel::core::interrupt::change::update(&handle, 0x08, 0x8E, 13);
+
+        firefly::kernel::core::interrupt::change::update(&handle, 0x08, 0x8E, 13);
     }
 }  // namespace firefly::kernel::io::legacy
