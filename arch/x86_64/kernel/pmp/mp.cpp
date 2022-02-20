@@ -41,6 +41,7 @@ namespace firefly::kernel::mp {
 
     void run(){
         if(!work) return;
+        if(firefly::kernel::main::acpitable.FADTable->PMTimerLength != 4){
             firefly::kernel::randomizer::srand(firefly::kernel::registers::get().u32.ebx);
         
             uint8_t list[0xFE];
@@ -68,6 +69,10 @@ namespace firefly::kernel::mp {
                 }
                 i++;
             }
+        } else {
+            //WIP
+            return;
+        }
     }
     void turn_off(){
         work = false;

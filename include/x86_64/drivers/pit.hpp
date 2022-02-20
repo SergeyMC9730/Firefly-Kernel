@@ -40,8 +40,6 @@ namespace firefly::drivers::pit {
     uint16_t get_irq(int ocw3);
     uint16_t get_irr();
     uint16_t get_isr();
-
-    void pit_handler([[maybe_unused]] iframe_t *frame);
     
     void init();
 }

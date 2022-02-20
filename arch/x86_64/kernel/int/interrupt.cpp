@@ -12,8 +12,6 @@
 
 #include <x86_64/kernel.hpp>
 
-#include <x86_64/drivers/pit.hpp>
-
 namespace firefly::kernel::core::interrupt {
 // struct __attribute__((packed)) idt_gate {
 //     uint16_t offset_0;
@@ -192,21 +190,7 @@ __attribute__((interrupt)) void exception_handler([[maybe_unused]] iframe_t *fra
 }  // namespace firefly::kernel::core::interrupt
 
 __attribute__((interrupt)) void exception_handler([[maybe_unused]] iframe_t *frame) {
-    switch(frame->int_no){
-        case 16: {
-            //keyboard irq?? pit irq??
-            // uint16_t a0 = firefly::drivers::pit::get_isr();
-            // uint16_t a1 = firefly::drivers::pit::get_irr();
-            // printf("isr: %d %d\niir: %d %d\n", a0 & 0xFF, (a0 >> 8) & 0xFF, a1 & 0xFF, (a1 >> 8) & 0xFF);
-            // asm volatile("cli\n\t"
-            //             "hlt");
-            firefly::drivers::pit::pit_handler(frame);
-            break;
-        }
-        default: {
-            printf("\n\nexception %d\n\n", frame->int_no);
-            asm volatile("cli\n\t"
-                        "hlt");
-        }
-    }
+    printf("\n\nexception\n\n");
+    asm volatile("cli\n\t"
+                "hlt");
 }

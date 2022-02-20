@@ -12,8 +12,8 @@ namespace firefly::drivers::pit {
         outb(PIC1_COMMAND, PIC1);
     }
     void remap(int offset1, int offset2) {
-        [[maybe_unused]] uint8_t a1 = inb(PIC1_DATA);
-        [[maybe_unused]] uint8_t a2 = inb(PIC2_DATA);
+        // uint8_t a1 = inb(PIC1_DATA);
+        // uint8_t a2 = inb(PIC2_DATA);
 
         outb(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4);
         io_pause();
@@ -81,20 +81,8 @@ namespace firefly::drivers::pit {
         return get_irq(PIC_READ_ISR);
     }
 
-    void pit_handler([[maybe_unused]] iframe_t *frame){
-        printf("pit handler!!\n");
-        ticks++;
-        firefly::drivers::pit::send_eoi(frame->int_no);
-    }
-
     void init(){
         remap(0x20, 0x28);
-        cli();
-        int d = 1193182 / 1000;
-        outb(0x43, 0 | 6 | 0x30 | 0x40);
-        outb(0x40, d);
-        outb(0x40, d >> 8);
-        sti();
         // firefly::kernel::core::interrupt::change::update(&handler, 0x08, 0x8E, 0);
         // firefly::kernel::core::interrupt::change::update(&handler, 0x08, 0x8E, 32);
         //timer_phase(1000, PIT_COUNTER0, PIT_MODE_SQUARE_WAVE, PIT_COUNTER0P);
