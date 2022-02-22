@@ -26,6 +26,8 @@
 
 #include <x86_64/int/interrupt.hpp>
 
+#include <x86_64/float.hpp>
+
 [[maybe_unused]] constexpr short MAJOR_VERSION = 0;
 [[maybe_unused]] constexpr short MINOR_VERSION = 0;
 constexpr const char *VERSION_STRING = "0.1-x86_64-fork";
@@ -64,6 +66,9 @@ ACPITable acpitable;
     Kernel
 */
 void kernel_main() {
+    [[maybe_unused]] float_t  f;
+    [[maybe_unused]] double_t d;
+
     if(!firefly::kernel::core::interrupt::is_crashed){
         applications::registerApplications();
         firefly::drivers::pit::init();
