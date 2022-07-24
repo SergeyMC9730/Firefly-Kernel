@@ -1,5 +1,8 @@
 **Fork of FireflyOS**
 
+# Project is no longer maintained!
+I'm working **at another operating system** called **Tunnel OS.**
+
 This is indev branch, where I commiting some uncompleted things. **There is no guarantee that OS can be builded!**
 
 # Firefly-Kernel
